@@ -325,7 +325,11 @@
                         break;
                     case 'checkbox':
                         // convert true/false
-                        if (this.record[field.name] == true) this.record[field.name] = 1; else this.record[field.name] = 0;
+                        if(field.options.items) { // MULTIPLES CHECKBOXES
+                            // Do nothing
+                        }else{
+                          if (this.record[field.name] == true) this.record[field.name] = 1; else this.record[field.name] = 0;
+                        }
                         break;
                     case 'date':
                         // format date before submit
@@ -382,7 +386,9 @@
         getChanges: function () {
             var differ = function(record, original, result) {
                 for (var i in record) {
-                    if (typeof record[i] == "object") {
+                    if ($.isArray(record[i]) && $(original[i]).not(record[i]).get().length > 0) { // MULTIPLES CHECKBOXES
+                        result[i] = record[i];
+                    } else if (typeof record[i] == "object") {
                         result[i] = differ(record[i], original[i] || {}, {});
                         if (!result[i] || $.isEmptyObject(result[i])) delete result[i];
                     } else if (record[i] != original[i]) {
@@ -737,7 +743,16 @@
                         input = '<input name="' + field.name + '" class="w2ui-input" type = "password" ' + field.html.attr + '/>';
                         break;
                     case 'checkbox':
-                        input = '<input name="'+ field.name +'" class="w2ui-input" type="checkbox" '+ field.html.attr +'/>';
+                        if(field.options.items) { // MUTIPLES CHECKBOXES
+                            items = w2obj.field.prototype.normMenu(items);
+                            input = [];
+                            for (var i = 0; i < field.options.items.length; i++) {
+                                input.push('<label style="white-space: nowrap;"><input name="'+ field.name +'" class="w2ui-input" type="checkbox" value="' + field.options.items[i].id + '" '+ field.html.attr +' /> <span style="position: relative;top: -2px;">' + field.options.items[i].text + '</span></label>');
+                            }
+                            input = input.join('<br />');
+                        }else{
+                            input = '<input name="'+ field.name +'" class="w2ui-input" type="checkbox" '+ field.html.attr +'/>';
+                        }
                         break;
                     case 'radio':
                         input = '';
@@ -882,49 +897,49 @@
             var obj = this;
             if (!this.box) return;
             if (!this.isGenerated || $(this.box).html() == null) return;
-			// event before
-			var edata = this.trigger({ phase: 'before', target: this.name, type: 'refresh', page: this.page, field: field })
-			if (edata.isCancelled === true) return;
+            // event before
+            var edata = this.trigger({ phase: 'before', target: this.name, type: 'refresh', page: this.page, field: field })
+            if (edata.isCancelled === true) return;
             if (field != null) {
                 var from_field = obj.get(field, true);
                 var to_field = from_field + 1;
             } else {
-				// update what page field belongs
-				$(this.box).find('input, textarea, select').each(function (index, el) {
-					var name  = ($(el).attr('name') != null ? $(el).attr('name') : $(el).attr('id'));
-					var field = obj.get(name);
-					if (field) {
-						// find page
-						var div = $(el).parents('.w2ui-page');
-						if (div.length > 0) {
-							for (var i = 0; i < 100; i++) {
-								if (div.hasClass('page-'+i)) { field.page = i; break; }
-							}
-						}
-					}
-				});
-				// default action
-				$(this.box).find('.w2ui-page').hide();
-				$(this.box).find('.w2ui-page.page-' + this.page).show();
-				$(this.box).find('.w2ui-form-header').html(this.header);
-				// refresh tabs if needed
-				if (typeof this.tabs === 'object' && $.isArray(this.tabs.tabs) && this.tabs.tabs.length > 0) {
-					$('#form_'+ this.name +'_tabs').show();
-					this.tabs.active = this.tabs.tabs[this.page].id;
-					this.tabs.refresh();
-				} else {
-					$('#form_'+ this.name +'_tabs').hide();
-				}
-				// refresh tabs if needed
-				if (typeof this.toolbar == 'object' && $.isArray(this.toolbar.items) && this.toolbar.items.length > 0) {
-					$('#form_'+ this.name +'_toolbar').show();
-					this.toolbar.refresh();
-				} else {
-					$('#form_'+ this.name +'_toolbar').hide();
-				}
+                // update what page field belongs
+                $(this.box).find('input, textarea, select').each(function (index, el) {
+                    var name  = ($(el).attr('name') != null ? $(el).attr('name') : $(el).attr('id'));
+                    var field = obj.get(name);
+                    if (field) {
+                        // find page
+                        var div = $(el).parents('.w2ui-page');
+                        if (div.length > 0) {
+                            for (var i = 0; i < 100; i++) {
+                                if (div.hasClass('page-'+i)) { field.page = i; break; }
+                            }
+                        }
+                    }
+                });
+                // default action
+                $(this.box).find('.w2ui-page').hide();
+                $(this.box).find('.w2ui-page.page-' + this.page).show();
+                $(this.box).find('.w2ui-form-header').html(this.header);
+                // refresh tabs if needed
+                if (typeof this.tabs === 'object' && $.isArray(this.tabs.tabs) && this.tabs.tabs.length > 0) {
+                    $('#form_'+ this.name +'_tabs').show();
+                    this.tabs.active = this.tabs.tabs[this.page].id;
+                    this.tabs.refresh();
+                } else {
+                    $('#form_'+ this.name +'_tabs').hide();
+                }
+                // refresh tabs if needed
+                if (typeof this.toolbar == 'object' && $.isArray(this.toolbar.items) && this.toolbar.items.length > 0) {
+                    $('#form_'+ this.name +'_toolbar').show();
+                    this.toolbar.refresh();
+                } else {
+                    $('#form_'+ this.name +'_toolbar').hide();
+                }
                 var from_field = 0;
                 var to_field = this.fields.length;
-			}
+            }
             // refresh values of fields
             for (var f = from_field; f < to_field; f++) {
                 var field = this.fields[f];
@@ -962,7 +977,15 @@
                         }
                     }
                     if (['toggle', 'checkbox'].indexOf(field.type) != -1) {
-                        value_new = ($(this).prop('checked') ? ($(this).prop('value') == 'on' ? true : $(this).prop('value')) : false);
+                        if(items = field.options.items) { // MULTIPLES CHECKBOXES
+                            items = w2obj.field.prototype.normMenu(items);
+                            value_new = [];
+                            field.$el.each(function (index, el) {
+                                if (el.checked) value_new.push(el.value);
+                            });
+                        }else{
+                            value_new = ($(this).prop('checked') ? ($(this).prop('value') == 'on' ? true : $(this).prop('value')) : false);
+                        }
                     }
                     // clean extra chars
                     if (['int', 'float', 'percent', 'money', 'currency'].indexOf(field.type) != -1) {
@@ -978,7 +1001,16 @@
                     // default action
                     var val = this.value;
                     if (this.type == 'select')   val = this.value;
-                    if (this.type == 'checkbox') val = this.checked ? true : false;
+                    if (this.type == 'checkbox') {
+                        if(field.options.items) { // MULTIPLES CHECKBOXES
+                            val = [];
+                            field.$el.each(function (index, el) {
+                                if (el.checked) val.push(el.value);
+                            });
+                        }else{
+                            val = this.checked ? true : false;
+                        }
+                    }
                     if (this.type == 'radio') {
                         field.$el.each(function (index, el) {
                             if (el.checked) val = el.value;
@@ -1123,7 +1155,14 @@
                         });
                         break;
                     case 'checkbox':
-                        $(field.el).prop('checked', value ? true : false);
+                        if(field.options.items && field.options.items.length> 0) {  // MULTIPLES CHECKBOXES
+                            if(!$.isArray(value)) value = [value];
+                            $(field.$el).each(function(i, chk) {
+                                $(this).prop('checked', ($.grep(value, function(v) { return v == $(chk).val(); }).length > 0) ? true : false);
+                            });
+                        }else{
+                            $(field.el).prop('checked', value ? true : false);
+                        }
                         break;
                     default:
                         $(field.el).val(value);
