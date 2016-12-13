@@ -28,6 +28,7 @@
 *   - added field.html.column
 *   - added field types html, empty, custom
 *   - httpHeaders
+*   - method
 *
 ************************************************************************/
 
@@ -50,6 +51,7 @@
         this.original    = {};
         this.postData    = {};
         this.httpHeaders = {};
+        this.method      = null;     // only used when not null, otherwise set based on w2utils.settings.dataType
         this.toolbar     = {};       // if not empty, then it is toolbar
         this.tabs        = {};       // if not empty, then it is tabs object
         this.style       = '';
@@ -502,6 +504,7 @@
                     ajaxOptions.contentType = 'application/json';
                     break;
             }
+            if (this.method) ajaxOptions.type = this.method;
             this.last.xhr = $.ajax(ajaxOptions)
                 .done(function (data, status, xhr) {
                     obj.unlock();
@@ -593,7 +596,7 @@
             // submit save
             if (postData == null) postData = {};
             if (!obj.url || (typeof obj.url == 'object' && !obj.url.save)) {
-                console.log("ERROR: Form cannot be saved because no url is defined.");
+                console.log('ERROR: Form cannot be saved because no url is defined.');
                 return;
             }
             obj.lock(w2utils.lang(obj.msgSaving) + ' <span id="'+ obj.name +'_progress"></span>');
@@ -679,6 +682,7 @@
                         ajaxOptions.contentType = 'application/json';
                         break;
                 }
+                if (this.method) ajaxOptions.type = this.method;
                 obj.last.xhr = $.ajax(ajaxOptions)
                     .done(function (data, status, xhr) {
                         obj.unlock();
@@ -779,11 +783,11 @@
                 if (column == null) column = field.html.column;
                 if (field.html.caption === '') field.html.caption = field.name;
                 // input control
-                var input = '<input name="'+ field.name +'" class="w2ui-input" type="text" '+ field.html.attr +'/>';
+                var input = '<input name="'+ field.name +'" class="w2ui-input" type="text" '+ field.html.attr +' tabindex="'+ (f+1) +'"/>';
                 switch (field.type) {
                     case 'pass':
                     case 'password':
-                        input = '<input name="' + field.name + '" class="w2ui-input" type = "password" ' + field.html.attr + '/>';
+                        input = '<input name="' + field.name + '" class="w2ui-input" type = "password" ' + field.html.attr + ' tabindex="'+ (f+1) +'"/>';
                         break;
                     case 'checkbox':
                         if(field.options.items) { // MUTIPLES CHECKBOXES
@@ -812,7 +816,7 @@
                         }
                         break;
                     case 'select':
-                        input = '<select name="' + field.name + '" class="w2ui-input" ' + field.html.attr + '>';
+                        input = '<select name="' + field.name + '" class="w2ui-input" ' + field.html.attr + ' tabindex="'+ (f+1) +'">';
                         // normalized options
                         var items =  field.options.items ? field.options.items : field.html.items;
                         if (!$.isArray(items)) items = [];
@@ -826,10 +830,10 @@
                         input += '</select>';
                         break;
                     case 'textarea':
-                        input = '<textarea name="'+ field.name +'" class="w2ui-input" '+ field.html.attr +'></textarea>';
+                        input = '<textarea name="'+ field.name +'" class="w2ui-input" '+ field.html.attr +' tabindex="'+ (f+1) +'"></textarea>';
                         break;
                     case 'toggle':
-                        input = '<input name="'+ field.name +'" type="checkbox" '+ field.html.attr +' class="w2ui-input w2ui-toggle"/><div><div></div></div>';
+                        input = '<input name="'+ field.name +'" type="checkbox" '+ field.html.attr +' class="w2ui-input w2ui-toggle" tabindex="'+ (f+1) +'"/><div><div></div></div>';
                         break;
                     case 'html':
                     case 'custom':
@@ -884,11 +888,9 @@
                 buttons += '\n</div>';
             }
             html = '';
-            //for (var p = 0; p < pages.length; p++){
-			for (p in pages){
+            for (var p = 0; p < pages.length; p++){
                 html += '<div class="w2ui-page page-'+ p +'" ' + ((p===0)?'':'style="display: none;"') + '><div class="w2ui-column-container" style="display: flex;">';
-                //for (var c = 0; c < pages[p].length; c++){
-				for (c in pages[p]){
+                for (var c = 0; c < pages[p].length; c++){
                     html += '<div class="w2ui-column col-'+ c +'">' + (pages[p][c] || '') + '\n</div>';
                 }
                 html += '\n</div></div>';
@@ -1019,7 +1021,7 @@
                 if (tmp) tmp.clear();
                 $(field.$el).off('change').on('change', function () {
                     var value_new      = this.value;
-                    var value_previous = obj.record[this.name] !== undefined ? obj.record[this.name] : '';
+                    var value_previous = obj.record[this.name] != null ? obj.record[this.name] : '';
                     var field          = obj.get(this.name);
                     if (['list', 'enum', 'file'].indexOf(field.type) != -1 && $(this).data('selected')) {
                         var nv = $(this).data('selected');
@@ -1325,7 +1327,7 @@
             }
             // focus on load
             function focusEl() {
-                var inputs = $(obj.box).find('input, select, textarea');
+                var inputs = $(obj.box).find('div:not(.w2ui-field-helper) > input, select, textarea, div > label:nth-child(1) > :radio').not('.file-input');
                 if (inputs.length > obj.focus) inputs[obj.focus].focus();
             }
             if (this.focus >= 0) {

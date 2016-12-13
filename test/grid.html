@@ -2,22 +2,28 @@
 <head>
 <link rel="stylesheet" type="text/css" media="screen" href="../dist/w2ui.css" />
 <link rel="stylesheet" type="text/css" media="screen" href="../libs/font-awesome/font-awesome.css" />
-<script type="text/javascript" src="../libs/jquery/jquery-2.1.4.min.js"></script>
+<script type="text/javascript" src="../libs/jquery/jquery-3.1.1.min.js"></script>
 <script type="text/javascript" src="../src/w2utils.js"></script>
 <script type="text/javascript" src="../src/w2tabs.js"></script>
 <script type="text/javascript" src="../src/w2toolbar.js"></script>
 <script type="text/javascript" src="../src/w2fields.js"></script>
 <script type="text/javascript" src="../src/w2popup.js"></script>
 <script type="text/javascript" src="../src/w2grid.js"></script>
+<style>
+.some {
+    background-color: blue !important;
+}
+</style>
 <script>
 //<![CDATA[
-$(function () {
+$.noConflict();
+jQuery(function () {
     // w2utils.locale('../src/locale/ru-ru');
 
-    $('#grid').w2grid({
+    jQuery('#grid').w2grid({
         name      : 'grid',
         header    : 'List of Names',
-        // url : '//w2ui.com/web/pages/demo/infinite/index.php',
+        url : '//w2ui.com/web/pages/demo/infinite/index2.php',
         // routeData : { id: 4 },
         // url       : '/1/:id/grid.json',
         // url     : {
@@ -91,9 +97,12 @@ $(function () {
 
         // possible values: text, alphanumeric, int, float, money, currency, percent, hex, list, combo, enum, select, date, time
         searches: [
-            { field: 'personid', caption: 'ID', type: 'int', value: [1,10], operator: 'less' },
-            { field: 'fname', caption: 'First Name', type: 'text', hidden1: true, value: 'Peter' },
-            { field: 'lname', caption: 'Last Name', type: 'text', options: { items: ['Cuban', 'Rene'] }}
+            { field: 'personid', caption: 'ID', type: 'int', value: [1, 10], operator: 'more' },
+            { field: 'color', caption: 'Color', type: 'color' },
+            { field: 'email', caption: 'Email', type: 'text', operator1: 'null', operators1: ['is', 'null', 'not null'] },
+            { field: 'fname', caption: 'First Name', type: 'text' },
+            { field: 'fname', caption: 'First Name', type: 'list', options: { items: ['Cuban', 'Rene'] } },
+            { field: 'lname', caption: 'Last Name', type: 'enum', options: { items: ['Cuban', 'Rene'] }}
         ],
         // sortData: [ { field: 'personid', direction: 'asc' } ],
         columnGroups1: [
@@ -178,11 +187,20 @@ $(function () {
                 //console.log('done', range);
             }
         },
+        onClick: function (event) {
+            var sel = this.getSelection();
+            if (sel.length >= 1 && sel[0] == event.recid) {
+                event.preventDefault();
+            }
+        },
         onSelect: function (event) {
             // console.log('select -->', event);
         },
-        onUnselect: function (event) {
-            // console.log('unselect -->', event);
+        onUnselect1: function (event) {
+            var sel = this.getSelection();
+            if (sel.length > 1 && sel[0] == event.recid) {
+                event.preventDefault();
+            }
         },
         onDelete: function (event) {
             //event.force = true;
@@ -197,8 +215,8 @@ $(function () {
             }
         },
         onExpand1: function (event) {
-            if (w2ui['grid-'+ event.recid]) $().w2destroy('grid-'+ event.recid);
-            $('#'+ event.box_id).w2grid({
+            if (w2ui['grid-'+ event.recid]) jQuery().w2destroy('grid-'+ event.recid);
+            jQuery('#'+ event.box_id).w2grid({
                 name: 'grid-' + event.recid,
                 fixedBody: false,
                 style: 'width: 100%; height: 150px;',
@@ -232,6 +250,9 @@ $(function () {
         ]
         //getFooterHTML: function () { console.log(this); return 'My Own Footer'; }
     });
+
+    return;
+
     w2ui.grid.on('change', function(event) {
         console.log('change', event.value_new, event.value_previous, event.value_original);
         //event.preventDefault();
@@ -245,7 +266,7 @@ $(function () {
         if (t < 0) dt = null;
         w2ui['grid'].records.push({
             recid : 'rec-' + i,
-            personid: 'Rec-' + i,
+            personid: i,
             fname: fname[Math.floor(Math.random() * fname.length)],
             lname: lname[Math.floor(Math.random() * lname.length)],
             email: 'vm@gmail.com', manager: '--',
@@ -253,15 +274,17 @@ $(function () {
             sdate: t,
             stime: dt,
             style1: 'background-color: #efefef',
-            w2ui: { children: [] },
+            w2ui: { children: [], colspan: { personid: 2 } },
         });
     }
 
-    w2ui.grid.records[0].w2ui = { children: w2ui.grid.records.splice(10, 5), colspan: { personid: 2 } };
-    w2ui.grid.records[2].w2ui = { children: w2ui.grid.records.splice(10, 3), colspan: { personid: 5 } };
-    w2ui.grid.records[6].w2ui = { children: w2ui.grid.records.splice(10, 10), colspan: { personid: 7 } };
-    w2ui.grid.records[6].w2ui.children[1].w2ui = { children: w2ui.grid.records.splice(10, 4) };
-    w2ui.grid.records[6].w2ui.children[1].w2ui.children[2].w2ui = { children: w2ui.grid.records.splice(10, 4) };
+    // w2ui.grid.records[0].w2ui = { children: w2ui.grid.records.splice(10, 5), colspan: { personid: 2 } };
+    // w2ui.grid.records[2].w2ui = { children: w2ui.grid.records.splice(10, 3), colspan: { personid: 5 } };
+    // w2ui.grid.records[6].w2ui = { children: w2ui.grid.records.splice(10, 10), colspan: { personid: 7 } };
+    // w2ui.grid.records[6].w2ui.children[1].w2ui = { children: w2ui.grid.records.splice(10, 4) };
+    // w2ui.grid.records[6].w2ui.children[1].w2ui.children[2].w2ui = { children: w2ui.grid.records.splice(10, 4) };
+    // w2ui.grid.records[6].w2ui.children[1].w2ui.children[3].w2ui = { children: w2ui.grid.records.splice(10, 4) };
+    // w2ui.grid.records[6].w2ui.children[9].w2ui = { children: w2ui.grid.records.splice(10, 4) };
 
     // w2ui.grid.records[4].w2ui.style = { fname: 'background-color: red' };
     w2ui.grid.records[10].w2ui.summary = true;
@@ -283,7 +306,7 @@ $(function () {
     <div id="grid" style="width: 1024px; height: 568px;"></div>
     <input placeholder="after grid" class="w2ui-input" style="margin: 10px 0px;"/>
     <br/>
-    <button class="w2ui-btn" onclick="$().w2destroy('grid');">Destroy</button>
+    <button class="w2ui-btn" onclick="jQuery().w2destroy('grid');">Destroy</button>
     <button class="w2ui-btn" onclick="w2ui.grid.skip(0);">Skip 0</button>
     <button class="w2ui-btn" onclick="w2ui.grid.skip(10);">Skip 10</button>
     <button class="w2ui-btn" onclick="w2ui.grid.skip(110);">Skip 110</button>

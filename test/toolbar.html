@@ -8,13 +8,15 @@
 <script type="text/javascript" src="../src/w2toolbar.js"></script>
 <script>
 //<![CDATA[
-    $(function () {
-        $('#toolbar').w2toolbar({
+    jQuery.noConflict();
+    jQuery(function () {
+        jQuery('#toolbar').w2toolbar({
             name: 'toolbar',
             routeData: { id: 5, vid: '40-43' },
             tooltip: 'top',
             items: [
-                { type: 'check', id: 'item1.1', text: 'Check', img: 'icon-page', tooltip: 'Check <br/>button', checked: true, route: '/project' },
+                { type: 'check', id: 'item1.1', text: 'Check', img: 'icon-page', tooltip: function () { return (new Date()).getTime(); },
+                    checked: true, route: '/project' },
                 { type: 'drop',  id: 'item12', img: 'icon-page', icon: 'fa-star', tooltip: 'Drop button',  html: 'so', route: '/project/:id/go', count: 4 },
                 { type: 'break', id: 'break0' },
                 { type: 'menu',  id: 'item2', caption: 'Drop Down', img: 'icon-folder', icon: 'fa-camera', hint: 'Menu button',
@@ -35,12 +37,13 @@
                 },
                 { type: 'menu-check', id: 'menucheck', text: 'Menu: Check',
                      items: [
-                        { id: 'item1', text: 'First Item', count: 3, icon: 'fa-heart' },
+                        { id: 'item1', text: 'Item 1.1', count: 3, icon: 'fa-heart' },
+                        { id: 'item2', text: 'Item 1.2', icon: 'fa-user', count: 12, checked: true },
+                        { id: 'item3', text: 'Item 1.3', icon: 'fa-star-empty', hotkey: '⌘S' },
                         { text: '--' },
-                        { id: 'item2', text: 'Item 2', icon: 'fa-user', count: 12, checked: true },
-                        { id: 'item3', text: 'Item 3', icon: 'fa-star-empty', hotkey: '⌘S' },
-                        { text: '--' },
-                        { id: 'item4', text: 'Item 4', icon: 'fa-link', hotkey: '⌘W', checked: true }
+                        { id: 'item4', text: 'Item 2.1', group: '2', icon: 'fa-link' },
+                        { id: 'item5', text: 'Item 2.2', group: '2', icon: 'fa-link' },
+                        { id: 'item6', text: 'Item 2.3', group: '2', icon: 'fa-link' }
                     ],
                 },
                 { type: 'menu-radio', id: 'menu.radio', text: 'Menu: Radio',
@@ -96,7 +99,7 @@
                 },
 
             ],
-            onClick: function (event) { console.log(event); }
+            // onClick: function (event) { console.log(event); }
         });
     });
 
